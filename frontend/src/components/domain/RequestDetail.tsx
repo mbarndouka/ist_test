@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { PurchaseRequest, RequestStatus } from '../../types';
-import { X, Clock, UserCheck, FileText, Edit2, Save, Upload } from 'lucide-react';
+import { PurchaseRequest} from '../../types';
+import { X, Clock, UserCheck, FileText, Edit2, Save } from 'lucide-react';
 import { useAuth } from '../../context/useAuth';
 import { requestsAPI } from '../../lib/api';
 import { cn } from '../../lib/utils';
@@ -95,7 +95,7 @@ const RequestDetail: React.FC<RequestDetailProps> = ({ request, onClose, onRefre
                 className="w-full bg-white/10 border-2 border-white/20 rounded-xl px-4 py-3 text-5xl font-bold text-white focus:outline-none focus:border-[#ccff00]"
               />
             ) : (
-              <h1 className="text-6xl font-bold bg-gradient-to-r from-[#ccff00] to-[#a3ff00] bg-clip-text text-transparent">
+              <h1 className="text-6xl font-bold bg-linear-to-r from-[#ccff00] to-[#a3ff00] bg-clip-text text-transparent">
                 {formatCurrency(request.amount)}
               </h1>
             )}
