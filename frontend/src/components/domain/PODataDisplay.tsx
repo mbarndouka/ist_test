@@ -1,7 +1,6 @@
 import React from 'react';
 import { FileText, Package, DollarSign, Calendar, Truck } from 'lucide-react';
 import { POData } from '../../types';
-import { cn } from '../../lib/utils';
 
 interface PODataDisplayProps {
   poData: POData | null;
