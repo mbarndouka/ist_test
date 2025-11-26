@@ -114,6 +114,11 @@ docker-compose down -v
 
 ### Backend (Render)
 🔗 **Live API**: https://ist-test.onrender.com/api/docs
-
+https://ist-test.onrender.com/dashboard to create your own users
 ### Frontend (Vercel)
 🔗 **Live App**: https://ist-test-beta.vercel.app/login
+test_users = [
+            {'username': 'marius', 'password': '123456@', 'user_type': 'staff'},
+            {'username': 'oumarou', 'password': '123456@', 'user_type': 'management'},
+            {'username': 'mbarndouka', 'password': '123456@', 'user_type': 'finance'},
+      ]
