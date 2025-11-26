@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django_extensions',
     'drf_spectacular',
     'drf_spectacular_sidecar',
+    'whitenoise.runserver_nostatic'
 ]
 
 CUSTOMER_APPS = [
@@ -52,6 +53,7 @@ INSTALLED_APPS += CUSTOMER_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # For serving static files
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware', # corsheaders
     'django.middleware.common.CommonMiddleware',

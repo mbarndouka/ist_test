@@ -59,7 +59,7 @@ migrations/**
 !**/migrations/__init__.py
 
 # Media files (uploaded content)
-Backend/media/
+Backend/media/*
 
 # Virtual environment
 venv/
