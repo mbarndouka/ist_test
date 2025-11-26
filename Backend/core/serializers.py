@@ -111,6 +111,8 @@ class PurchaseRequestSerializer(serializers.ModelSerializer):
             'purchase_order',
             'receipt',
             'created_at',
+            'receipt_validation_status',
+            'receipt_validation_result',
         ]
 
     def get_approver_details(self, obj: PurchaseRequest):

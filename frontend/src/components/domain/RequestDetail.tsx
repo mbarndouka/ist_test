@@ -6,6 +6,8 @@ import { requestsAPI } from '../../lib/api';
 import { cn } from '../../lib/utils';
 import { formatCurrency, normalizeStatus } from '../../lib/utils';
 import { showSuccess, showError } from '../../lib/toast';
+import ReceiptValidation from './ReceiptValidation';
+import PODataDisplay from './PODataDisplay';
 
 interface RequestDetailProps {
   request: PurchaseRequest;
@@ -300,6 +302,22 @@ const RequestDetail: React.FC<RequestDetailProps> = ({ request, onClose, onRefre
                 )}
               </div>
             </div>
+
+            {/* Purchase Order Data Display */}
+            {!isEditing && request.purchase_order && (
+              <PODataDisplay
+                poData={request.po_data || null}
+                purchaseOrderUrl={request.purchase_order}
+              />
+            )}
+
+            {/* Receipt Validation Results */}
+            {!isEditing && request.receipt && request.receipt_validation_status && (
+              <ReceiptValidation
+                validationStatus={request.receipt_validation_status}
+                validationResult={request.receipt_validation_result}
+              />
+            )}
 
             {/* Timeline */}
             {!isEditing && request.logs && request.logs.length > 0 && (

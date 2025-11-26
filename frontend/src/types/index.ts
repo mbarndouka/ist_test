@@ -1,5 +1,5 @@
-export type UserRole = 'STAFF' | 'MANAGEMENT' | 'FINANCE';
-export type RequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+export type UserRole = "STAFF" | "MANAGEMENT" | "FINANCE";
+export type RequestStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export interface User {
   id: string; // Changed to string to support UUIDs
@@ -39,6 +39,29 @@ export interface ApprovalLog {
   approver_name: string;
 }
 
+export type ValidationStatus = "pending" | "valid" | "invalid" | "error";
+
+export interface ValidationDiscrepancy {
+  type: string;
+  description: string;
+}
+
+export interface ValidationExtractedData {
+  vendor?: string;
+  total_amount?: string;
+  items?: string[];
+}
+
+export interface ReceiptValidationResult {
+  is_valid: boolean;
+  confidence_score: number;
+  discrepancies: ValidationDiscrepancy[];
+  extracted_data: ValidationExtractedData;
+  summary: string;
+  error?: string;
+  raw_response?: string;
+}
+
 export interface PurchaseRequest {
   id: string; // Backend returns UUID string
   title: string;
@@ -53,12 +76,54 @@ export interface PurchaseRequest {
   purchase_order: string | null;
   receipt: string | null;
 
+  // Receipt validation fields
+  receipt_validation_status: ValidationStatus | null;
+  receipt_validation_result: ReceiptValidationResult | null;
+
+  // PO data (optional - stored after approval)
+  po_data?: POData;
+
   // Backend returns nested object with full user details
   requester_details: BackendUserDetail;
   approver_details: BackendUserDetail | null;
   approved_by: string | null;
 
   logs?: ApprovalLog[];
+}
+
+export interface POVendor {
+  name: string;
+  address: string;
+  contact: string;
+}
+
+export interface POItem {
+  description: string;
+  quantity: string;
+  unit_price: string;
+  total: string;
+}
+
+export interface POPricing {
+  subtotal: string;
+  tax: string;
+  shipping: string;
+  total: string;
+}
+
+export interface POTerms {
+  payment: string;
+  delivery: string;
+  validity: string;
+}
+
+export interface POData {
+  vendor?: POVendor;
+  items?: POItem[];
+  pricing?: POPricing;
+  terms?: POTerms;
+  notes?: string;
+  error?: string;
 }
 
 export interface CreateRequestPayload {

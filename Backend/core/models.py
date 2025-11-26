@@ -27,6 +27,25 @@ class PurchaseRequest(models.Model):
     purchase_order = models.FileField(upload_to='purchase_orders/', null=True, blank=True)
     receipt = models.FileField(upload_to='receipts/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # Receipt validation fields
+    receipt_validation_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pending', 'Pending'),
+            ('valid', 'Valid'),
+            ('invalid', 'Invalid'),
+            ('error', 'Error')
+        ],
+        null=True,
+        blank=True,
+        help_text='AI validation status of the receipt'
+    )
+    receipt_validation_result = models.JSONField(
+        null=True,
+        blank=True,
+        help_text='Detailed validation results from AI'
+    )
     
     def __str__(self):
         return f"{self.title} - {self.status}"

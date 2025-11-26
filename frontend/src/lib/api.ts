@@ -3,7 +3,23 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
-import { AuthResponse, CreateRequestPayload, PurchaseRequest } from "../types";
+import { AuthResponse, CreateRequestPayload, PurchaseRequest, ReceiptValidationResult, ValidationStatus, POData } from "../types";
+
+export interface SubmitReceiptResponse {
+  successMessage: string;
+  status_code: number;
+  validation_status?: ValidationStatus;
+  validation_result?: ReceiptValidationResult;
+  error?: string;
+}
+
+export interface ApproveResponse {
+  successMessage: string;
+  status_code: number;
+  po_generated: boolean;
+  po_file?: string;
+  po_data?: POData;
+}
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -109,14 +125,14 @@ export const requestsAPI = {
   },
 
   approve: (id: string) =>
-    api.patch<PurchaseRequest>(`/requests/${id}/approve/`),
+    api.patch<ApproveResponse>(`/requests/${id}/approve/`),
 
   reject: (id: string) => api.patch<PurchaseRequest>(`/requests/${id}/reject/`),
 
   uploadReceipt: (id: string, file: File) => {
     const formData = new FormData();
     formData.append("receipt", file);
-    return api.post<PurchaseRequest>(
+    return api.post<SubmitReceiptResponse>(
       `/requests/${id}/submit-receipt/`,
       formData,
       {

@@ -78,7 +78,7 @@ export const RequestCardDark: React.FC<RequestCardProps> = ({ request, onClick }
 // VARIANT 2: Light with Accent Color
 export const RequestCardLight: React.FC<RequestCardProps> = ({ request, onClick, onRefresh }) => {
   const status = normalizeStatus(request.status);
-  const { isApprover, isFinance } = useAuth();
+  const { isApprover, isStaff } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
@@ -88,13 +88,21 @@ export const RequestCardLight: React.FC<RequestCardProps> = ({ request, onClick,
   const isPending = status === 'PENDING';
   const isApproved = status === 'APPROVED';
   const showManagementActions = isApprover && isPending;
-  const showFinanceActions = isFinance && isApproved && !request.receipt;
+  const showStaffUploadReceipt = isStaff && isApproved && !request.receipt;
 
   const handleApprove = async () => {
     setLoading(true);
     try {
-      await requestsAPI.approve(request.id);
-      showSuccess('Request approved successfully');
+      const response = await requestsAPI.approve(request.id);
+      const approvalData = response.data;
+
+      // Show appropriate message based on PO generation status
+      if (approvalData.po_generated) {
+        showSuccess('Request approved and Purchase Order generated successfully!');
+      } else {
+        showSuccess('Request approved successfully');
+      }
+
       setShowApproveDialog(false);
       onRefresh?.();
     } catch (error) {
@@ -125,8 +133,20 @@ export const RequestCardLight: React.FC<RequestCardProps> = ({ request, onClick,
 
     setLoading(true);
     try {
-      await requestsAPI.uploadReceipt(request.id, receipt);
-      showSuccess('Receipt uploaded and validated successfully');
+      const response = await requestsAPI.uploadReceipt(request.id, receipt);
+      const validationData = response.data;
+
+      // Show appropriate message based on validation status
+      if (validationData.validation_status === 'valid') {
+        showSuccess('Receipt uploaded and validated successfully!');
+      } else if (validationData.validation_status === 'invalid') {
+        showError('Receipt uploaded but discrepancies found. Check details.');
+      } else if (validationData.validation_status === 'error') {
+        showError(`Receipt uploaded but validation failed: ${validationData.error || 'Unknown error'}`);
+      } else {
+        showSuccess('Receipt uploaded and validation is pending');
+      }
+
       setReceipt(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -238,8 +258,8 @@ export const RequestCardLight: React.FC<RequestCardProps> = ({ request, onClick,
           </div>
         )}
 
-        {/* Receipt Upload for Finance */}
-        {showFinanceActions && (
+        {/* Receipt Upload for Staff */}
+        {showStaffUploadReceipt && (
           <div className="mt-6 pt-6 border-t border-gray-100 finance-upload-area">
             <div className="flex flex-col gap-3">
               <input

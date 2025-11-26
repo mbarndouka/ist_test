@@ -89,9 +89,29 @@ class PurchaseRequestViewSet(viewsets.GenericViewSet):
         pr.status = PurchaseRequest.APPROVED
         pr.approved_by = Manager.objects.get(user__username=request.user)
         pr.save()
+
+        # Automatically generate Purchase Order
+        po_result = {"success": False, "message": "No proforma attached"}
+        try:
+            from core.services import POGenerationService
+
+            po_service = POGenerationService()
+            po_result = po_service.generate_purchase_order(pr)
+
+            if po_result["success"]:
+                po_message = f"Purchase request approved and PO generated: {po_result['po_file']}"
+            else:
+                po_message = f"Purchase request approved. PO generation note: {po_result.get('error', 'Unknown error')}"
+        except Exception as e:
+            po_message = f"Purchase request approved. PO generation failed: {str(e)}"
+            po_result = {"success": False, "error": str(e)}
+
         return Response({
-            "successMessage": "Purchase request approved",
-            "status_code": status.HTTP_200_OK
+            "successMessage": po_message,
+            "status_code": status.HTTP_200_OK,
+            "po_generated": po_result.get("success", False),
+            "po_file": po_result.get("po_file"),
+            "po_data": po_result.get("extracted_data")
             }, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["patch"], url_path="reject", permission_classes=[HasManagmentPermission])
@@ -117,13 +137,51 @@ class PurchaseRequestViewSet(viewsets.GenericViewSet):
         if pr.status != "approved":
             return Response({"detail": "You can only submit a receipt after approval"}, status=400)
 
-        receipt = SubmitReceiptSerializer(instance=pr, data=request.data, partial=True)
-        receipt.is_valid(raise_exception=True)
-        receipt.save()
+        receipt_serializer = SubmitReceiptSerializer(instance=pr, data=request.data, partial=True)
+        receipt_serializer.is_valid(raise_exception=True)
+        receipt_serializer.save()
 
-        return Response({
-            "successMessage": "Receipt submitted successfully",
-            "status_code": status.HTTP_200_OK
+        # Validate receipt with AI
+        try:
+            from core.services import ReceiptValidationService
+
+            validator = ReceiptValidationService()
+            validation_result = validator.validate_receipt(
+                receipt_file_path=pr.receipt.path,
+                purchase_request=pr
+            )
+
+            # Update validation status based on result
+            if validation_result.get('is_valid'):
+                pr.receipt_validation_status = 'valid'
+            else:
+                pr.receipt_validation_status = 'invalid'
+
+            pr.receipt_validation_result = validation_result
+            pr.save()
+
+            return Response({
+                "successMessage": "Receipt submitted and validated successfully",
+                "status_code": status.HTTP_200_OK,
+                "validation_status": pr.receipt_validation_status,
+                "validation_result": validation_result
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            # If validation fails, still accept the receipt but mark as error
+            pr.receipt_validation_status = 'error'
+            pr.receipt_validation_result = {
+                "is_valid": False,
+                "error": str(e),
+                "summary": "Validation failed due to system error"
+            }
+            pr.save()
+
+            return Response({
+                "successMessage": "Receipt submitted but validation failed",
+                "status_code": status.HTTP_200_OK,
+                "validation_status": "error",
+                "error": str(e)
             }, status=status.HTTP_200_OK)
 
 
